@@ -1,0 +1,32 @@
+# Versi skema dari docker compose
+version: "2"
+
+# Mendefinikan service
+services:
+  # Service pertama
+  item-db:
+    # Menggunakan image MongoDB versi 3 dari Docker Hub
+    image: mongo:3
+    # Menggunakan volume bernama app-db untuk data MongoDB
+    volumes:
+      - app-db:/data/db
+    # Menambahkan restart policy
+    restart: always
+
+  # Service kedua
+  item-app:
+    # Menggunakan image item-app:v1 dari GitHub Container Registry
+    image: ghcr.io/yusufbagussh/item-app:v1
+    # Menunggu item-db diluncurkan sebelum item-app
+    depends_on:
+      - item-db
+    # Melakukan port mapping dari port 8080 di host ke port 80 di kontainer
+    ports:
+      - "80:8080"
+    # Menambahkan restart policy
+    restart: always
+
+# Membuat volume
+volumes:
+  # Definsikan volume bernama app-db yang digunakan oleh item-db
+  app-db:
