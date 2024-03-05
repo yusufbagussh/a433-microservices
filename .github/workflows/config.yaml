@@ -1,0 +1,33 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  lint-dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install hadolint
+      run: |
+        sudo wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+        sudo chmod +x /bin/hadolint
+    - name: Lint Dockerfile
+      run: hadolint ./Dockerfile
+
+  build-app-karsajobs-ui:
+    needs: test-app
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: yusufbagussh
+        password: ${{ secrets.GHCR_PAT }}
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ghcr.io/yusufbagussh/karsajobs-ui:latest
+
