@@ -1,0 +1,50 @@
+version: 2.1
+
+jobs:
+  lint-dockerfile:
+    docker:
+      - image: hadolint/hadolint
+    steps:
+      - checkout
+      - run:
+          name: Lint Dockerfile
+          command: hadolint Dockerfile
+
+  test-app:
+    docker:
+      - image: circleci/golang:1.15
+    steps:
+      - checkout
+      - run:
+          name: Download Go Modules
+          command: go mod download
+      - run:
+          name: Test App
+          command: go test -v -short --count=1 $(go list ./...)
+
+  build-app-karsajobs:
+    docker:
+      - image: circleci/golang:1.15
+    steps:
+      - checkout
+      - setup_remote_docker # Memungkinkan penggunaan Docker dalam job
+      - run:
+          name: Build Docker Image
+          command: docker build -t karsajobs:latest .
+      - run:
+          name: Rename Docker Image
+          command: docker tag karsajobs:latest ghcr.io/yusufbagussh/karsajobs:latest
+      - run:
+          name: Login to Registry
+          command: docker login ghcr.io -u $GH_USER -p $GH_TOKEN
+      - run:
+          name: Push Image to Registry
+          command: docker push ghcr.io/yusufbagussh/karsajobs:latest
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - lint-dockerfile
+      - test-app
+      - build-app-karsajobs
